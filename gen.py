@@ -46,18 +46,48 @@ def calculate_hex_len(item_count: int, min_len: int) -> int:
     needed = math.ceil(math.log(item_count, 16))
     return max(min_len, needed)
 
-def generate_cf_rule(hex_len: int, category_key_len: int = 1) -> str:
+def generate_cf_rule(hex_len: int) -> str:
     """生成 Cloudflare 规则表达式"""
     
-    # 1. 全随机 (No query param or empty)
-    # 路径: /all/<hex>.json
-    rule_random = f'concat("/all/", substring(uuidv4(cf.random_seed), 0, {hex_len}), ".json")'
+    # 1. Landscape (横屏)
+    # Match: (http.request.uri.query contains "c=l")
+    rule_landscape = f'concat("/categories/l/", substring(uuidv4(cf.random_seed), 0, {hex_len}), ".json")'
     
-    # 2. 分类 (With query param)
-    # 路径: /categories/<category>/<hex>.json
-    rule_category = f'concat("/categories/", substring(http.request.uri.query, 2, {category_key_len}), "/", substring(uuidv4(cf.random_seed), 0, {hex_len}), ".json")'
+    # 2. Portrait (竖屏)
+    # Match: (http.request.uri.query contains "c=p")
+    rule_portrait = f'concat("/categories/p/", substring(uuidv4(cf.random_seed), 0, {hex_len}), ".json")'
     
-    return f"Random Rule:\n{rule_random}\n\nCategory Rule (e.g. ?c=l):\n{rule_category}"
+    # 3. All (全随机)
+    # Match: (not http.request.uri.query contains "c=")
+    rule_all = f'concat("/all/", substring(uuidv4(cf.random_seed), 0, {hex_len}), ".json")'
+    
+    content = [
+        "===========================================================",
+        "请在 Cloudflare -> Rules -> Transform Rules 中创建以下 3 条规则",
+        "建议顺序: 1. Landscape, 2. Portrait, 3. Random (All)",
+        "===========================================================",
+        "",
+        "--- Rule 1: Landscape (横屏) ---",
+        "Rule Name: Random Image - Landscape",
+        'When incoming requests match: (http.request.uri.query contains "c=l")',
+        "Path Rewrite: Dynamic",
+        f"Expression: {rule_landscape}",
+        "",
+        "--- Rule 2: Portrait (竖屏) ---",
+        "Rule Name: Random Image - Portrait",
+        'When incoming requests match: (http.request.uri.query contains "c=p")',
+        "Path Rewrite: Dynamic",
+        f"Expression: {rule_portrait}",
+        "",
+        "--- Rule 3: Random (全随机) ---",
+        "Rule Name: Random Image - All",
+        'When incoming requests match: (not http.request.uri.query contains "c=")',
+        "Path Rewrite: Dynamic",
+        f"Expression: {rule_all}",
+        ""
+    ]
+    
+    return "\n".join(content)
 
 def ensure_dir(path: Path):
     if path.exists():
@@ -184,7 +214,7 @@ def main():
         json.dump(cats, f, indent=2, ensure_ascii=False)
         
     # 6. 生成 rules.txt
-    rules = generate_cf_rule(hex_len, category_key_len=1)
+    rules = generate_cf_rule(hex_len)
     with open(OUTPUT_DIR / "rules.txt", 'w', encoding='utf-8') as f:
         f.write(rules)
         
