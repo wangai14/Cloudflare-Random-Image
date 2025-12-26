@@ -54,8 +54,8 @@ def generate_cf_rule(hex_len: int, category_key_len: int = 1) -> str:
     rule_random = f'concat("/all/", substring(uuidv4(cf.random_seed), 0, {hex_len}), ".json")'
     
     # 2. 分类 (With query param)
-    # 路径: /<category>/<hex>.json
-    rule_category = f'concat("/", substring(http.request.uri.query, 2, {category_key_len}), "/", substring(uuidv4(cf.random_seed), 0, {hex_len}), ".json")'
+    # 路径: /categories/<category>/<hex>.json
+    rule_category = f'concat("/categories/", substring(http.request.uri.query, 2, {category_key_len}), "/", substring(uuidv4(cf.random_seed), 0, {hex_len}), ".json")'
     
     return f"Random Rule:\n{rule_random}\n\nCategory Rule (e.g. ?c=l):\n{rule_category}"
 
