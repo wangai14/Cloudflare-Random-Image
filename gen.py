@@ -2,6 +2,7 @@ import json
 import math
 import shutil
 import urllib.parse
+import sys
 from pathlib import Path
 from itertools import cycle
 
@@ -158,8 +159,8 @@ def main():
     print(f"  Portrait:  {len(portrait)}")
     
     if len(all_imgs) == 0:
-        print("No images found. Exiting.")
-        return
+        print("Error: No images found in source directory. Please check if 'image' folder exists and contains images.")
+        sys.exit(1)
 
     # 2. 计算 Hex 长度
     hex_len = calculate_hex_len(len(all_imgs), MIN_HEX_LEN)
