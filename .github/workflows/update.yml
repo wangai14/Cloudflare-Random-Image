@@ -51,8 +51,8 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Add all generated files
-          git add dist/ rules.txt CNAME
+          # Add all generated files (force add in case they are ignored)
+          git add -f dist/ rules.txt CNAME
           
           # Check if there are changes
           if git diff --staged --quiet; then
