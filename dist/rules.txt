@@ -1,0 +1,26 @@
+===========================================================
+【说明】规则生成：
+模式: JSON Mode
+存储结构: /l/, /p/, /all/ 指向 .json 文件
+===========================================================
+
+--- Rule 1: Landscape (指定横屏 -> .json) ---
+Rule Name: Random Image - Landscape - JSON
+Match Expression:
+(http.host eq "image.blueke.dpdns.org" and http.request.uri.path eq "/l")
+Redirect Expression:
+concat("https://gcore.jsdelivr.net/gh/Keduoli03/Cloudflare-Random-Image@main/dist/l/", substring(uuidv4(cf.random_seed), 0, 1), ".json")
+
+--- Rule 2: Portrait (指定竖屏 -> .json) ---
+Rule Name: Random Image - Portrait - JSON
+Match Expression:
+(http.host eq "image.blueke.dpdns.org" and http.request.uri.path eq "/p")
+Redirect Expression:
+concat("https://gcore.jsdelivr.net/gh/Keduoli03/Cloudflare-Random-Image@main/dist/p/", substring(uuidv4(cf.random_seed), 0, 1), ".json")
+
+--- Rule 3: Random All (全局随机 -> .json) ---
+Rule Name: Random Image - All - JSON
+Match Expression (请点击 Edit expression 粘贴):
+(http.host eq "image.blueke.dpdns.org" and (http.request.uri.path eq "/" or (http.request.uri.path ne "/l" and http.request.uri.path ne "/p")))
+Redirect Expression:
+concat("https://gcore.jsdelivr.net/gh/Keduoli03/Cloudflare-Random-Image@main/dist/all/", substring(uuidv4(cf.random_seed), 0, 1), ".json")
