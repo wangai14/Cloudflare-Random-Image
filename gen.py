@@ -33,7 +33,7 @@ OUTPUT_DIR = Path("dist")
 CDN_PROVIDER = "https://gcore.jsdelivr.net/gh"
 REPO_USER = "Keduoli03"
 REPO_NAME = "Cloudflare-Random-Image"
-BRANCH = "main"
+BRANCH = "dist"
 BASE_URL = f"{CDN_PROVIDER}/{REPO_USER}/{REPO_NAME}@{BRANCH}/image/"
 
 # 输出模式: "local" (生成文件), "json" (生成 JSON URL), "redirect" (生成 HTML 跳转)
