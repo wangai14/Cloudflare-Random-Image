@@ -56,13 +56,20 @@ def generate_cf_rule(hex_len: int) -> str:
     # 2. Portrait (竖屏) -> 映射到 /pxxxx.webp
     rule_portrait = f'concat("/p", substring(uuidv4(cf.random_seed), 0, {hex_len}), "{ext}")'
     
+    # 3. Random (全随机) -> 混合 l/p
+    # 匹配: 根目录 "/", 或者以 "/" 结尾, 或者非 "/l" 且非 "/p"
+    # 注意：Cloudflare 规则匹配是"短路"的，建议把这条放在最后作为兜底
     
-    rule_all = f'concat("/", if(substring(uuidv4(cf.random_seed), 0, 1) < "8", "l", "p"), substring(uuidv4(cf.random_seed), 1, {hex_len}), "{ext}")'
+    # Cloudflare Rewrite 不支持 if()，使用 regex_replace 模拟: 0-7 -> l, 8-f -> p
+    random_char = 'substring(uuidv4(cf.random_seed), 0, 1)'
+    prefix_logic = f'regex_replace(regex_replace({random_char}, "[0-7]", "l"), "[89a-f]", "p")'
+    rule_all = f'concat("/", {prefix_logic}, substring(uuidv4(cf.random_seed), 1, {hex_len}), "{ext}")'
     
     content = [
         "===========================================================",
         "请在 Cloudflare -> Rules -> Transform Rules 中创建以下 3 条规则",
         "建议顺序: 1. Landscape, 2. Portrait, 3. Random (All)",
+        "注意：第 3 条规则是兜底规则，必须放在最后！",
         "===========================================================",
         "",
         "--- Rule 1: Landscape (横屏) ---",
@@ -79,10 +86,10 @@ def generate_cf_rule(hex_len: int) -> str:
         "Path Rewrite Expression:",
         f'{rule_portrait}',
         "",
-        "--- Rule 3: Random (全随机) ---",
+        "--- Rule 3: Random (全随机 / 兜底) ---",
         "Rule Name: Random Image - All",
         "Match Expression:",
-        f'(http.host eq "{DOMAIN}" and http.request.uri.path eq "/")',
+        f'(http.host eq "{DOMAIN}" and (http.request.uri.path eq "/" or ends_with(http.request.uri.path, "/") or (http.request.uri.path ne "/l" and http.request.uri.path ne "/p")))',
         "Path Rewrite Expression:",
         f'{rule_all}',
         ""
