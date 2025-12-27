@@ -104,7 +104,7 @@ def generate_cf_rule(hex_len: int) -> str:
         f"--- Rule 3: Random All (全局随机 -> {suffix}) ---",
         f"Rule Name: Random Image - All - {desc_suffix}",
         "Match Expression (请点击 Edit expression 粘贴):",
-        f'(http.host eq "{DOMAIN}" and (http.request.uri.path eq "/" or (http.request.uri.path ne "/l" and http.request.uri.path ne "/p")))',
+        f'(http.host eq "{DOMAIN}" and (http.request.uri.path eq "/" or http.request.uri.path eq "/all"))',
         "Redirect Expression:",
         f'{rule_all}',
         ""

@@ -23,6 +23,6 @@ concat("/dist/p/", substring(uuidv4(cf.random_seed), 0, 1), ".json")
 --- Rule 3: Random All (全局随机 -> .json) ---
 Rule Name: Random Image - All - JSON
 Match Expression (请点击 Edit expression 粘贴):
-(http.host eq "image.blueke.dpdns.org" and (http.request.uri.path eq "/" or (http.request.uri.path ne "/l" and http.request.uri.path ne "/p")))
+(http.host eq "image.blueke.dpdns.org" and (http.request.uri.path eq "/" or http.request.uri.path eq "/all"))
 Redirect Expression:
 concat("/dist/all/", substring(uuidv4(cf.random_seed), 0, 1), ".json")
