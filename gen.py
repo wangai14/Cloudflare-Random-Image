@@ -46,17 +46,15 @@ def generate_cf_rule(hex_len: int) -> str:
     
     ext = ".webp" if CONVERT_WEBP else DEFAULT_EXT
     
-    # 注意：现在使用前缀命名法，所有文件都在根目录
-    # L: l-0a.webp, P: p-0a.webp, All: (混合)
     
-    # 1. Landscape (横屏) -> 映射到 /l-xxxx.webp
-    rule_landscape = f'concat("/l-", substring(uuidv4(cf.random_seed), 0, {hex_len}), "{ext}")'
+    # 1. Landscape (横屏) -> 映射到 /lxxxx.webp
+    rule_landscape = f'concat("/l", substring(uuidv4(cf.random_seed), 0, {hex_len}), "{ext}")'
     
-    # 2. Portrait (竖屏) -> 映射到 /p-xxxx.webp
-    rule_portrait = f'concat("/p-", substring(uuidv4(cf.random_seed), 0, {hex_len}), "{ext}")'
+    # 2. Portrait (竖屏) -> 映射到 /pxxxx.webp
+    rule_portrait = f'concat("/p", substring(uuidv4(cf.random_seed), 0, {hex_len}), "{ext}")'
     
     
-    rule_all = f'concat("/", if(substring(uuidv4(cf.random_seed), 0, 1) < "8", "l-", "p-"), substring(uuidv4(cf.random_seed), 1, {hex_len}), "{ext}")'
+    rule_all = f'concat("/", if(substring(uuidv4(cf.random_seed), 0, 1) < "8", "l", "p"), substring(uuidv4(cf.random_seed), 1, {hex_len}), "{ext}")'
     
     content = [
         "===========================================================",
@@ -163,8 +161,8 @@ def write_files_prefix(data_list, output_dir: Path, hex_len: int, prefix: str):
 
     for i in range(total_slots):
         hex_name = f"{i:0{hex_len}x}"
-        # 文件名格式: prefix-hex.ext (e.g., l-0a.webp)
-        target_filename = f"{prefix}-{hex_name}{ext}"
+        # 文件名格式: prefixhex.ext (e.g., l0a.webp)
+        target_filename = f"{prefix}{hex_name}{ext}"
         target_path = output_dir / target_filename
         
         source_item = buckets[i]
