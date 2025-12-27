@@ -6,7 +6,7 @@ import sys
 # 是否使用 JSON 模式 (True/False)
 # True:  生成 JSON 文件 (gen_json.py)，节省空间，需要配合 Cloudflare Worker 或前端解析。
 # False: 生成图片副本 (gen_image.py)，直接返回图片，占用更多空间，但兼容性更好。
-USE_JSON_MODE = True
+USE_JSON_MODE = False
 
 # ===========================================
 
