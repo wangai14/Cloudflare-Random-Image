@@ -36,6 +36,10 @@ DEFAULT_EXT = ".jpg"
 DOMAIN = "image.blueke.dpdns.org"
 
 # ===========================================
+# 仓库 URL 和 CDN 提供方
+REPO_URL = "https://github.com/Keduoli03/Cloudflare-Random-Image"
+CDN_PROVIDER = "https://gcore.jsdelivr.net/gh/Keduoli03/Cloudflare-Random-Image@dist"
+# ===========================================
 
 def calculate_hex_len(item_count: int, min_len: int) -> int:
     """根据数据量自动计算所需的 Hex 长度"""
@@ -49,12 +53,15 @@ def generate_cf_rule(hex_len: int) -> str:
     
     ext = ".webp" if CONVERT_WEBP else DEFAULT_EXT
     
+    # 使用 CDN_PROVIDER 拼接完整 URL (Redirect 模式)
+    # 如果为空，则回退到相对路径 (Rewrite 模式，虽然用户现在要求用 CDN)
+    base_url = CDN_PROVIDER if CDN_PROVIDER else ""
     
-    # 1. Landscape (横屏) -> 映射到 /lxxxx.webp
-    rule_landscape = f'concat("/l", substring(uuidv4(cf.random_seed), 0, {hex_len}), "{ext}")'
+    # 1. Landscape (横屏) -> 映射到 CDN/lxxxx.webp
+    rule_landscape = f'concat("{base_url}/l", substring(uuidv4(cf.random_seed), 0, {hex_len}), "{ext}")'
     
-    # 2. Portrait (竖屏) -> 映射到 /pxxxx.webp
-    rule_portrait = f'concat("/p", substring(uuidv4(cf.random_seed), 0, {hex_len}), "{ext}")'
+    # 2. Portrait (竖屏) -> 映射到 CDN/pxxxx.webp
+    rule_portrait = f'concat("{base_url}/p", substring(uuidv4(cf.random_seed), 0, {hex_len}), "{ext}")'
     
     # 3. Random (全随机) -> 混合 l/p
     # 匹配: 根目录 "/", 或者以 "/" 结尾, 或者非 "/l" 且非 "/p"
@@ -63,34 +70,35 @@ def generate_cf_rule(hex_len: int) -> str:
     # Cloudflare Rewrite 不支持 if()，使用 regex_replace 模拟: 0-7 -> l, 8-f -> p
     random_char = 'substring(uuidv4(cf.random_seed), 0, 1)'
     prefix_logic = f'regex_replace(regex_replace({random_char}, "[0-7]", "l"), "[89a-f]", "p")'
-    rule_all = f'concat("/", {prefix_logic}, substring(uuidv4(cf.random_seed), 1, {hex_len}), "{ext}")'
+    rule_all = f'concat("{base_url}/", {prefix_logic}, substring(uuidv4(cf.random_seed), 1, {hex_len}), "{ext}")'
     
     content = [
         "===========================================================",
-        "请在 Cloudflare -> Rules -> Transform Rules 中创建以下 3 条规则",
-        "建议顺序: 1. Landscape, 2. Portrait, 3. Random (All)",
-        "注意：第 3 条规则是兜底规则，必须放在最后！",
+        "【注意】你启用了 CDN_PROVIDER，请使用 Redirect Rules (重定向规则)！",
+        "路径: Cloudflare -> Rules -> Redirect Rules",
+        "类型: Dynamic Redirect (动态重定向)",
+        "状态码: 302 (Temporary Redirect) 或 301",
         "===========================================================",
         "",
         "--- Rule 1: Landscape (横屏) ---",
         "Rule Name: Random Image - Landscape",
         "Match Expression:",
         f'(http.host eq "{DOMAIN}" and http.request.uri.path eq "/l")',
-        "Path Rewrite Expression:",
+        "Redirect Expression:",
         f'{rule_landscape}',
         "",
         "--- Rule 2: Portrait (竖屏) ---",
         "Rule Name: Random Image - Portrait",
         "Match Expression:",
         f'(http.host eq "{DOMAIN}" and http.request.uri.path eq "/p")',
-        "Path Rewrite Expression:",
+        "Redirect Expression:",
         f'{rule_portrait}',
         "",
         "--- Rule 3: Random (全随机 / 兜底) ---",
         "Rule Name: Random Image - All",
         "Match Expression:",
-        f'(http.host eq "{DOMAIN}" and (http.request.uri.path eq "/" or ends_with(http.request.uri.path, "/") or (http.request.uri.path ne "/l" and http.request.uri.path ne "/p")))',
-        "Path Rewrite Expression:",
+        f'(http.host eq "{DOMAIN}" and (http.request.uri.path eq "/" or (http.request.uri.path ne "/l" and http.request.uri.path ne "/p")))',
+        "Redirect Expression:",
         f'{rule_all}',
         ""
     ]
